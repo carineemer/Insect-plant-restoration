@@ -1,0 +1,81 @@
+---
+title: "Foodweb restauracao"
+author: "Carine Emer"
+date: "13/11/2018"
+output: word_document
+---
+
+#######################################################################
+Dataset Rafael Domingos and Gislene Ganade - UFRN
+Foodwebs plant-herbivore in restored communities
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup, echo=T, include = F}
+# Set the working directory
+setwd("~/Dropbox/Rafael restauracao")
+#knitr::opts_knit$set(root.dir = "setwd("~/Dropbox/Rafael restauracao")
+```
+
+
+```{r load packages, include = F, echo = T}
+# load packages
+library(bipartite)
+library(vegan)
+library(reshape2)
+library(igraph)
+library(networkD3)
+library(reshape2)
+```
+
+
+```{r input data}
+y2017<-read.csv("Interactions_2017.csv", head=T,row.names=1)
+y2018<-read.csv("Interactions_2018.csv", head=T,row.names=1)
+```
+
+#################################
+Drawing networks
+#################################
+
+```{r plot networks bipartite}
+
+plot2017<-plotweb(y2017,  ## set overall parameters 
+              text.rot=c(90), labsize=1,arrow="down.center",
+              y.width.low=0.05,y.width.high=0.05, ybig=1.8, low.y=1.2, high.y=2,
+              high.spacing=.01, low.spacing=0.01,
+              # shorter labels
+              #high.lablength=3, low.lablength=0, 
+              ### check the method if you prefer
+                   method="cca", 
+              ### set colors
+                  col.low="green", col.high="yellow", col.interaction = "grey80")
+
+plot2018<-plotweb(y2018,  ## set overall parameters 
+              text.rot=c(90), labsize=1,arrow="down.center",
+              y.width.low=0.05,y.width.high=0.05, ybig=1.8, low.y=1.2, high.y=2,
+              high.spacing=.01, low.spacing=0.01,
+              # shorter labels
+              #high.lablength=3, low.lablength=0, 
+              ### check the method if you prefer
+                   method="cca", 
+              ### set colors
+                  col.low="green", col.high="yellow", col.interaction = "grey80")
+
+##### network3D
+## transform to edgelist
+m1<-melt(y2017) 
+## select only interactions =1
+m2 <- subset(m1, value>0) 
+
+# sets the graph framework
+  g=graph.data.frame(m2,directed=FALSE) 
+n3D<-simpleNetwork(m2)
+n3D
+saveNetwork(n3D, file = "y2017.html") ### save network as html
+```
+
+
+```
