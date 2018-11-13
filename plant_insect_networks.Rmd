@@ -63,12 +63,128 @@ plot2018<-plotweb(y2018,  ## set overall parameters
                    method="cca", 
               ### set colors
                   col.low="green", col.high="yellow", col.interaction = "grey80")
+```
 
+```{r plot igraph}
+guilds<-read.csv("data2017.csv", head=T)
+guilds2018<-read.csv("data2018.csv", head=T)
+
+## transform to edgelist
+m1<-melt(y2018) 
+## select only interactions =1
+m2 <- subset(m1, value>0) 
+# sets the graph framework
+g=graph.data.frame(m2,directed=FALSE) 
+#Check the main properties of the igraph object
+V(g)
+E(g)
+
+#ordering dataframes so that the order of species list matches the order of species in graph g
+guild <- guilds2018[order(match(guilds2018$species, V(g)$name)),] 
+#clos$closeness <- as.numeric(clos$closeness)
+
+# to a given value of closeness you associate a colour
+#color <- colorRampPalette(c('white','blue')) # colour palette
+# the colour vector for each species
+#closeness.col <- heat.colors(25)[as.numeric(cut(-clos$closeness, breaks = 25))] 
+
+
+## to create a vector for guild
+V(g)$guild=as.character(guild$guild)
+V(g)$shape=V(g)$guild
+V(g)$shape[V(g)$guild=="insect"]="circle"
+V(g)$shape[V(g)$guild=="plant"]="square"
+
+## to create a vector for guild
+V(g)$guild=as.character(guild$guild)
+V(g)$color=V(g)$guild
+V(g)$color[V(g)$guild=="insect"]="red"
+V(g)$color[V(g)$guild=="plant"]="green"
+
+
+
+
+plot(g,
+     # Set the drawing mode
+     # This package contains several drawing methods; try them!
+     layout=layout_nicely,
+     # Set title
+     main='2018',
+     # Set node sizes
+     vertex.size=6,
+     # Set node attributes
+     vertex.shape=V(g)$shape,
+     vertex.size = 12,
+     vertex.color = V(g)$color,
+     # Set link colors
+     edge.color = "lightblue",
+     # Set link curvature from 0 to 1
+     edge.curved=0.3,
+     # Set nodes labels
+     vertex.label.dist=200,
+     vertex.label.color='black',
+     vertex.label.font=1,
+     vertex.label=V(g)$name,
+     vertex.label.cex=0.5
+)
+
+```
+
+
+```{r plot network3D}
 ##### network3D
 ## transform to edgelist
 m1<-melt(y2017) 
 ## select only interactions =1
 m2 <- subset(m1, value>0) 
+g=graph.data.frame(m2,directed=FALSE) # sets the graph framework
+
+####  SIMPLE  NETWORK
+simpleNetwork(m2)
+
+
+### OR
+# Find group membership
+wt <- cluster_walktrap(g, steps = 16)
+members <- membership(wt)
+# Convert igraph to list for networkD3
+sj_list <- igraph_to_networkD3(g, group = members)
+
+# Plot as a forceDirected Network
+ntw<-forceNetwork(Links = sj_list$links, Nodes = sj_list$nodes, Source = 'source',
+          Target = 'target', NodeID = 'name', Group = 'group',
+              zoom = TRUE, linkDistance = 1,opacity=1.2)
+ ,          colourScale = "d3.scale.category20f()")
+ntw
+saveNetwork(ntw, 'ntw_2017.html', selfcontained =T)
+
+#### 2018
+## transform to edgelist
+m1<-melt(y2018) 
+## select only interactions =1
+m2 <- subset(m1, value>0) 
+g=graph.data.frame(m2,directed=FALSE) # sets the graph framework
+
+####  SIMPLE  NETWORK
+simpleNetwork(m2)
+
+
+### OR
+# Find group membership
+wt <- cluster_walktrap(g, steps = 16)
+members <- membership(wt)
+# Convert igraph to list for networkD3
+sj_list <- igraph_to_networkD3(g, group = members)
+
+# Plot as a forceDirected Network
+ntw<-forceNetwork(Links = sj_list$links, Nodes = sj_list$nodes, Source = 'source',
+          Target = 'target', NodeID = 'name', Group = 'group',
+              zoom = TRUE, linkDistance = 1,opacity=1.2)
+ ,          colourScale = "d3.scale.category20f()")
+ntw
+saveNetwork(ntw, 'ntw_2018.html', selfcontained =T)
+
+```
 
 # sets the graph framework
   g=graph.data.frame(m2,directed=FALSE) 
@@ -78,4 +194,118 @@ saveNetwork(n3D, file = "y2017.html") ### save network as html
 ```
 
 
+```{r connectance}
+############################## CONNECTANCE #####################
+obs_c_2017<-networklevel(y2017, index="connectance")
+# Set Null Model
+  null <-nullmodel(y2017, N=100, method=3) 
+  null1 <-sapply (X=null, FUN=networklevel, index="connectance") 
+  means_null1 <- apply (X=cbind(null1),MARGIN=2, FUN=mean, na.rm=T)  
+  sd.means_null1 <- apply(X=cbind(null1), MARGIN=2, FUN=sd, na.rm=T)
+  z_score<-(obs_c_2017-means_null1)/sd.means_null1
+  z_score
+  p_value<-sum(null1>= obs_c_2017)/1000 # valor de p
+  p_value
+
+plot(density(null1), lwd=2, xlim=c(0, 70))
+abline(v=obs_c_2017, col="red", lwd=1)
+
+
+### 2018
+
+obs_c_2018<-networklevel(y2018, index="connectance")
+# Set Null Model
+  null <-nullmodel(y2018, N=100, method=3) 
+  null1 <-sapply (X=null, FUN=nested, method="connectance") 
+  means_null1 <- apply (X=cbind(null1),MARGIN=2, FUN=mean, na.rm=T)  
+  sd.means_null1 <- apply(X=cbind(null1), MARGIN=2, FUN=sd, na.rm=T)
+  z_score<-(obs_c_2018-means_null1)/sd.means_null1
+  z_score
+  p_value<-sum(null1>= obs_c_2018)/1000 # valor de p
+  p_value
+
+plot(density(null1), lwd=2, xlim=c(0, 70))
+abline(v=obs_c_2018, col="red", lwd=1)
+
+
 ```
+
+```{r nestedness}
+########################## NESTEDNESS ########################## 
+nested_2017<-networklevel(y2017, index = "weighted NODF")
+nested_2017
+
+#### Using the classical nullmodels for bipartite
+## method 3 = vaznull
+  null <-nullmodel(y2017, N=100, method=3) 
+  null1 <-sapply (X=null, FUN=nested, method="NODF2") 
+  means_null1 <- apply (X=cbind(null1),MARGIN=2, FUN=mean, na.rm=T)  
+  sd.means_null1 <- apply(X=cbind(null1), MARGIN=2, FUN=sd, na.rm=T)
+  z_score<-(nested_2017-means_null1)/sd.means_null1
+  z_score
+  p_value<-sum(null1>= nested_2017)/1000 # valor de p
+  p_value
+
+plot(density(null1), lwd=2, xlim=c(0, 70))
+abline(v=nested_2017, col="red", lwd=1)
+
+
+####### 2018
+nested_2018<-networklevel(y2018, index = "weighted NODF")
+nested_2018
+
+  null <-nullmodel(y2018, N=100, method=3) 
+  null1 <-sapply (X=null, FUN=nested, method="NODF2") 
+  means_null1 <- apply (X=cbind(null1),MARGIN=2, FUN=mean, na.rm=T)  
+  sd.means_null1 <- apply(X=cbind(null1), MARGIN=2, FUN=sd, na.rm=T)
+  z_score<-(nested_2018-means_null1)/sd.means_null1
+  z_score
+  p_value<-sum(null1>= nested_2018)/1000 # valor de p
+  p_value
+
+plot(density(null1), lwd=2, xlim=c(0, 70))
+abline(v=nested_2018, col="red", lwd=1)
+
+```
+
+```{r modularity}
+######################### MODULARITY ########################## 
+m_2017<-computeModules(y2017)
+m_2017
+# Check the components of each module
+  #printoutModuleInformation(m_2017)
+  #plotModuleWeb(m_2017)
+
+# Set Null Model
+  nulls <- nullmodel(y2017, N=100, method=3) 
+  modules.nulls <- sapply(nulls, computeModules)
+  like.nulls <- sapply(modules.nulls, function(x) x@likelihood)
+  z <- (m_2017@likelihood - mean(like.nulls))/sd(like.nulls)
+  z
+  p <- 2*pnorm(-abs(z))
+  plot(density(like.nulls), lwd=2, xlim=c(0, .8))
+  abline(v=m_2017@likelihood, col="red", lwd=1)
+ 
+  
+######2018  
+m_2018<-computeModules(y2018)
+m_2018
+# Check the components of each module
+  printoutModuleInformation(m_2018)
+  plotModuleWeb(m_2018)
+
+# Set Null Model
+  nulls <- nullmodel(y2018, N=100, method=3) 
+  modules.nulls <- sapply(nulls, computeModules)
+  like.nulls <- sapply(modules.nulls, function(x) x@likelihood)
+  z <- (m_2018@likelihood - mean(like.nulls))/sd(like.nulls)
+  z
+  p <- 2*pnorm(-abs(z))
+  plot(density(like.nulls), lwd=2, xlim=c(0, .8))
+  abline(v=m_2018@likelihood, col="red", lwd=1)  
+  
+
+save.image("insect_plant.RData")
+```
+
+
