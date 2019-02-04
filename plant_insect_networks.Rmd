@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r setup, echo=T, include = F}
 # Set the working directory
-setwd("~/Dropbox/Rafael restauracao")
+setwd("~/Dropbox/Rafael restauracao/Insect_plant restoration")
 #knitr::opts_knit$set(root.dir = "setwd("~/Dropbox/Rafael restauracao")
 ```
 
@@ -193,7 +193,6 @@ n3D
 saveNetwork(n3D, file = "y2017.html") ### save network as html
 ```
 
-
 ```{r connectance}
 ############################## CONNECTANCE #####################
 obs_c_2017<-networklevel(y2017, index="connectance")
@@ -207,13 +206,14 @@ obs_c_2017<-networklevel(y2017, index="connectance")
   p_value<-sum(null1>= obs_c_2017)/1000 # valor de p
   p_value
 
-plot(density(null1), lwd=2, xlim=c(0, 70))
+plot(density(null1), lwd=2, xlim=c(0, 1))
 abline(v=obs_c_2017, col="red", lwd=1)
 
 
 ### 2018
 
 obs_c_2018<-networklevel(y2018, index="connectance")
+
 # Set Null Model
   null <-nullmodel(y2018, N=100, method=3) 
   null1 <-sapply (X=null, FUN=nested, method="connectance") 
@@ -224,7 +224,7 @@ obs_c_2018<-networklevel(y2018, index="connectance")
   p_value<-sum(null1>= obs_c_2018)/1000 # valor de p
   p_value
 
-plot(density(null1), lwd=2, xlim=c(0, 70))
+plot(density(null1), lwd=2, xlim=c(0, 1))
 abline(v=obs_c_2018, col="red", lwd=1)
 
 
@@ -308,4 +308,21 @@ m_2018
 save.image("insect_plant.RData")
 ```
 
+
+## to test which species or interactions are most common between years??
+
+```{r centrality}
+
+k_2017_i<-specieslevel(y2017, index = "degree", level = 'higher' )
+k_2017_p<-specieslevel(y2017, index = "degree", level = 'lower' )
+k_2018_i<-specieslevel(y2018, index = "degree", level = "higher")
+k_2018_p<-specieslevel(y2018, index = "degree", level = "lower")
+
+```
+
+
+```{r save RData}
+save.image("restoration.RData")
+
+```
 
