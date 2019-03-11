@@ -28,12 +28,52 @@ library(reshape2)
 library(igraph)
 library(networkD3)
 library(reshape2)
+library(dplyr)
+library(tidyverse)
+library(data.table)
 ```
 
 
 ```{r input data}
 y2017<-read.csv("Interactions_2017.csv", head=T,row.names=1)
 y2018<-read.csv("Interactions_2018.csv", head=T,row.names=1)
+
+##### function to input multiples .csv at once
+
+###################### --------------------------- Diversity 2017
+setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2017")
+# assuming your working directory is the folder with the CSVs
+myfiles <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
+d2017<-lapply(myfiles, read.csv, row.names=1, header = T)# read data from files, quickly
+head(d2017[[1]]) # validate file reading
+names(d2017) <- myfiles # assign names to list item
+
+
+###################### --------------------------- Diversity 2018
+setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2018")
+myfiles18 <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
+d2018<-lapply(myfiles18, read.csv, row.names=1, header = T)# read data from files, quickly
+head(d2018[[1]]) # validate file reading
+names(d2018) <- myfiles18 # assign names to list item
+
+###################### ---------------------------Plots 2017
+setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2017/Matrizes por Plot")
+# assuming your working directory is the folder with the CSVs
+myfiles <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
+p2017<-lapply(myfiles, read.csv, row.names=1, header = T)# read data from files, quickly
+head(p2017[[1]]) # validate file reading
+names(p2017) <- myfiles # assign names to list item
+
+
+###################### --------------------------- Plots 2018
+setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2018/Matrizes por Plot")
+myfiles18 <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
+p2018<-lapply(myfiles18, read.csv, row.names=1, header = T)# read data from files, quickly
+head(p2018[[1]]) # validate file reading
+names(p2018) <- myfiles18 # assign names to list item
+
+str(p)
+
 ```
 
 #################################
@@ -65,29 +105,33 @@ plot2018<-plotweb(y2018,  ## set overall parameters
                   col.low="green", col.high="yellow", col.interaction = "grey80")
 ```
 
+
 ```{r plot igraph}
 guilds<-read.csv("data2017.csv", head=T)
 guilds2018<-read.csv("data2018.csv", head=T)
 
-## transform to edgelist
-m1<-melt(y2018) 
-## select only interactions =1
-m2 <- subset(m1, value>0) 
-# sets the graph framework
-g=graph.data.frame(m2,directed=FALSE) 
+###################
+#############################################2018
+#Transform the previous bipartite object into an igraph object
+net2 = cbind.data.frame(reference=row.names(y2018),y2018)
+str(net2)
+netlist = melt(net2, na.rm = T)
+colnames(netlist) = c("rows", "columns", "weight")
+netlist[,1]=as.character(paste(netlist[,1]))
+netlist[,2]=as.character(paste(netlist[,2]))
+netlist2 <- subset(netlist, weight > 0)
+nodes <- unique(data.frame(nodes = c(netlist2[,1], netlist2[,2])))
+head(nodes)
+links = netlist2
+g <- graph_from_data_frame(d=links, vertices=nodes, directed=F) 
+class(g)
+
 #Check the main properties of the igraph object
 V(g)
 E(g)
 
 #ordering dataframes so that the order of species list matches the order of species in graph g
 guild <- guilds2018[order(match(guilds2018$species, V(g)$name)),] 
-#clos$closeness <- as.numeric(clos$closeness)
-
-# to a given value of closeness you associate a colour
-#color <- colorRampPalette(c('white','blue')) # colour palette
-# the colour vector for each species
-#closeness.col <- heat.colors(25)[as.numeric(cut(-clos$closeness, breaks = 25))] 
-
 
 ## to create a vector for guild
 V(g)$guild=as.character(guild$guild)
@@ -102,12 +146,10 @@ V(g)$color[V(g)$guild=="insect"]="red"
 V(g)$color[V(g)$guild=="plant"]="green"
 
 
-
-
 plot(g,
      # Set the drawing mode
      # This package contains several drawing methods; try them!
-     layout=layout_nicely,
+     layout=layout.fruchterman.reingold.grid,
      # Set title
      main='2018',
      # Set node sizes
@@ -128,6 +170,65 @@ plot(g,
      vertex.label.cex=0.5
 )
 
+#################
+#########################2017
+#Transform into an igraph object
+net2 = cbind.data.frame(reference=row.names(y2017),y2017)
+str(net2)
+netlist = melt(net2, na.rm = T)
+colnames(netlist) = c("rows", "columns", "weight")
+netlist[,1]=as.character(paste(netlist[,1]))
+netlist[,2]=as.character(paste(netlist[,2]))
+netlist2 <- subset(netlist, weight > 0)
+nodes <- unique(data.frame(nodes = c(netlist2[,1], netlist2[,2])))
+head(nodes)
+links = netlist2
+g17 <- graph_from_data_frame(d=links, vertices=nodes, directed=F) 
+class(g17)
+
+#Check the main properties of the igraph object
+V(g17)
+E(g17)
+
+#ordering dataframes so that the order of species list matches the order of species in graph g
+guild <- guilds[order(match(guilds$species, V(g17)$name)),] 
+
+## to create a vector for guild
+V(g17)$guild=as.character(guild$guild)
+V(g17)$shape=V(g17)$guild
+V(g17)$shape[V(g17)$guild=="insect"]="circle"
+V(g17)$shape[V(g17)$guild=="plant"]="square"
+
+## to create a vector for guild
+V(g17)$guild=as.character(guild$guild)
+V(g17)$color=V(g17)$guild
+V(g17)$color[V(g17)$guild=="insect"]="red"
+V(g17)$color[V(g17)$guild=="plant"]="green"
+
+
+plot(g17,
+     # Set the drawing mode
+     # This package contains several drawing methods; try them!
+     layout=layout_nicely(g17),
+     # Set title
+     main='2017',
+     # Set node sizes
+     vertex.size=6,
+     # Set node attributes
+     vertex.shape=V(g17)$shape,
+     vertex.size = 12,
+     vertex.color = V(g17)$color,
+     # Set link colors
+     edge.color = "lightblue",
+     # Set link curvature from 0 to 1
+     edge.curved=0.3,
+     # Set nodes labels
+     vertex.label.dist=200,
+     vertex.label.color='black',
+     vertex.label.font=1,
+     vertex.label=V(g17)$name,
+     vertex.label.cex=0.5
+)
 ```
 
 
@@ -153,7 +254,7 @@ sj_list <- igraph_to_networkD3(g, group = members)
 # Plot as a forceDirected Network
 ntw<-forceNetwork(Links = sj_list$links, Nodes = sj_list$nodes, Source = 'source',
           Target = 'target', NodeID = 'name', Group = 'group',
-              zoom = TRUE, linkDistance = 1,opacity=1.2)
+              zoom = TRUE, linkDistance = 0.01,opacity=1.2)
  ,          colourScale = "d3.scale.category20f()")
 ntw
 saveNetwork(ntw, 'ntw_2017.html', selfcontained =T)
@@ -191,11 +292,12 @@ saveNetwork(ntw, 'ntw_2018.html', selfcontained =T)
 n3D<-simpleNetwork(m2)
 n3D
 saveNetwork(n3D, file = "y2017.html") ### save network as html
-```
+
 
 ```{r connectance}
 ############################## CONNECTANCE #####################
 obs_c_2017<-networklevel(y2017, index="connectance")
+
 # Set Null Model
   null <-nullmodel(y2017, N=100, method=3) 
   null1 <-sapply (X=null, FUN=networklevel, index="connectance") 
@@ -227,8 +329,46 @@ obs_c_2018<-networklevel(y2018, index="connectance")
 plot(density(null1), lwd=2, xlim=c(0, 1))
 abline(v=obs_c_2018, col="red", lwd=1)
 
+################### diversity plots
+###d2017
+results_c2017<-sapply (d2017, FUN=networklevel, index="connectance") 
+###d2018
+results_c2018<-sapply (d2018, FUN=networklevel, index="connectance") 
+results_c<-cbind(results_c2017,results_c2018) #### need to 
+results_c
+
 
 ```
+
+```{r links per species and partner diversity}
+### --------------------------------------- Diversity Plots --------------
+########### links per species
+results_lsp2017<-sapply (d2017, FUN=networklevel, index="links per species") 
+###d2018
+results_lsp2018<-sapply (d2018, FUN=networklevel, index="links per species") 
+results_lsp<-cbind(results_lsp2017,results_lsp2018) #### 
+
+########### partner diversity
+results_pdiv2017<-sapply (d2017, FUN=networklevel, index="partner diversity")
+results_pdiv2018<-sapply (d2018, FUN=networklevel, index="partner diversity") 
+results_pdiv<-cbind(results_pdiv2017,results_pdiv2018) #### 
+
+### --------------------------------------- Individual plots --------------
+########### links per species
+results_lsp2017p<-sapply (p2017, FUN=networklevel, index="links per species") 
+###d2018
+results_lsp2018p<-sapply (p2018, FUN=networklevel, index="links per species") 
+results_lsp<-cbind(results_lsp2017p,results_lsp2018p) #### 
+
+########### partner diversity
+results_pdiv2017p<-sapply (p2017, FUN=networklevel, index="partner diversity")
+results_pdiv2018p<-sapply (p2018, FUN=networklevel, index="partner diversity") 
+results_pdiv<-cbind(results_pdiv2017p,results_pdiv2018p) #### 
+
+
+#write.csv(results_lsp,"results_metrics.csv")
+```
+
 
 ```{r nestedness}
 ########################## NESTEDNESS ########################## 
@@ -265,6 +405,7 @@ nested_2018
 
 plot(density(null1), lwd=2, xlim=c(0, 70))
 abline(v=nested_2018, col="red", lwd=1)
+
 
 ```
 
@@ -317,6 +458,11 @@ k_2017_i<-specieslevel(y2017, index = "degree", level = 'higher' )
 k_2017_p<-specieslevel(y2017, index = "degree", level = 'lower' )
 k_2018_i<-specieslevel(y2018, index = "degree", level = "higher")
 k_2018_p<-specieslevel(y2018, index = "degree", level = "lower")
+
+write.csv(k_2017_i, "k_insects_2017.csv")
+write.csv(k_2018_i, "k_insects_2018.csv")
+write.csv(k_2017_p, "k_plants_2017.csv")
+write.csv(k_2017_p, "k_insects_2018.csv")
 
 ```
 
