@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r setup, echo=T, include = F}
 # Set the working directory
-setwd("~/Dropbox/Rafael restauracao/Insect_plant restoration")
+setwd("~/Dropbox/Rafael restauracao/Insect_plant restoration/New matrices")
 #knitr::opts_knit$set(root.dir = "setwd("~/Dropbox/Rafael restauracao")
 ```
 
@@ -35,18 +35,18 @@ library(data.table)
 
 
 ```{r input data}
-y2017<-read.csv("Interactions_2017.csv", head=T,row.names=1)
-y2018<-read.csv("Interactions_2018.csv", head=T,row.names=1)
+y2017<-read.csv("Matriz_2017.csv", head=T,row.names=1)
+y2018<-read.csv("Matriz_2018.csv", head=T,row.names=1)
 
 ##### function to input multiples .csv at once
 
 ###################### --------------------------- Diversity 2017
-setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2017")
+setwd("~/Dropbox/Rafael restauracao/Data/New matrices")
 # assuming your working directory is the folder with the CSVs
 myfiles <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
-d2017<-lapply(myfiles, read.csv, row.names=1, header = T)# read data from files, quickly
-head(d2017[[1]]) # validate file reading
-names(d2017) <- myfiles # assign names to list item
+new_data<-lapply(myfiles, read.csv, row.names=1, header = T)# read data from files, quickly
+head(new_data[[1]]) # validate file reading
+names(new_data) <- myfiles # assign names to list item
 
 
 ###################### --------------------------- Diversity 2018
@@ -327,7 +327,7 @@ obs_c_2018<-networklevel(y2018, index="connectance")
 
 # Set Null Model
   null <-nullmodel(y2018, N=100, method=3) 
-  null1 <-sapply (X=null, FUN=nested, method="connectance") 
+  null1 <-sapply (X=null, FUN=networklevel, index="connectance") 
   means_null1 <- apply (X=cbind(null1),MARGIN=2, FUN=mean, na.rm=T)  
   sd.means_null1 <- apply(X=cbind(null1), MARGIN=2, FUN=sd, na.rm=T)
   z_score<-(obs_c_2018-means_null1)/sd.means_null1
@@ -340,7 +340,7 @@ abline(v=obs_c_2018, col="red", lwd=1)
 
 ################### diversity plots
 ###d2017
-results_c2017<-sapply (d2017, FUN=networklevel, index="connectance") 
+results_c<-sapply (new_data, FUN=networklevel, index="connectance") 
 ###d2018
 results_c2018<-sapply (d2018, FUN=networklevel, index="connectance") 
 results_c<-cbind(results_c2017,results_c2018) #### need to 
@@ -351,16 +351,57 @@ results_c
 
 ```{r links per species and partner diversity}
 ### --------------------------------------- Diversity Plots --------------
-########### links per species
+###########
+#######################links per species
 results_lsp2017<-sapply (d2017, FUN=networklevel, index="links per species") 
 ###d2018
 results_lsp2018<-sapply (d2018, FUN=networklevel, index="links per species") 
 results_lsp<-cbind(results_lsp2017,results_lsp2018) #### 
 
-########### partner diversity
+### new data
+links_sp<-sapply (new_data, FUN=networklevel, index="links per species") 
+
+###########
+##################partner diversity
 results_pdiv2017<-sapply (d2017, FUN=networklevel, index="partner diversity")
 results_pdiv2018<-sapply (d2018, FUN=networklevel, index="partner diversity") 
 results_pdiv<-cbind(results_pdiv2017,results_pdiv2018) #### 
+
+
+res_partdiv_newdata<-sapply (new_data, FUN=networklevel, index="partner diversity")
+res_partdiv_newdata<-t(as.data.frame(res_partdiv_newdata))
+
+res_metrics<-cbind(links_sp,res_partdiv_newdata)
+
+
+###############
+###########################connectance
+connectance<-sapply (new_data, FUN=networklevel, index="connectance")
+
+res_metrics1<-cbind(res_metrics,connectance)
+
+head(res_metrics1)
+
+###############
+########################### weigthed nestedness
+wnodf<-sapply (new_data, FUN=networklevel, index="weighted nestedness")
+
+res_metrics2<-cbind(res_metrics1,wnodf)
+
+head(res_metrics2)
+
+###############
+########################### weigthed nestedness
+mod<-sapply (new_data, FUN=computeModules)
+modularity <- sapply(mod, function(x) x@likelihood)
+
+
+res_metrics3<-cbind(res_metrics2,modularity)
+
+head(res_metrics3)
+
+write.csv(res_metrics3, "results_newdata.csv")
+
 
 ### --------------------------------------- Individual plots --------------
 ########### links per species
@@ -420,8 +461,8 @@ abline(v=nested_2018, col="red", lwd=1)
 
 ```{r modularity}
 ######################### MODULARITY ########################## 
-m_2017<-computeModules(y2017)
-m_2017
+m_2018<-computeModules(y2018)
+m_2018
 # Check the components of each module
   #printoutModuleInformation(m_2017)
   #plotModuleWeb(m_2017)
@@ -471,7 +512,52 @@ k_2018_p<-specieslevel(y2018, index = "degree", level = "lower")
 write.csv(k_2017_i, "k_insects_2017.csv")
 write.csv(k_2018_i, "k_insects_2018.csv")
 write.csv(k_2017_p, "k_plants_2017.csv")
-write.csv(k_2017_p, "k_insects_2018.csv")
+write.csv(k_2017_p, "k_plants_2018.csv")
+
+
+k_2017div16_i<-specieslevel(new_data[[1]], index = "degree", level = 'higher' )
+k_2017div2_i<-specieslevel(new_data[[2]], index = "degree", level = 'higher' )
+k_2017div4_i<-specieslevel(new_data[[3]], index = "degree", level = 'higher' )
+k_2017div8_i<-specieslevel(new_data[[4]], index = "degree", level = 'higher' )
+write.csv(k_2017div16_i, "k_insects_2017div16.csv")
+write.csv(k_2017div2_i, "k_insects_2017div2.csv")
+write.csv(k_2017div4_i, "k_insects_2017div4.csv")
+write.csv(k_2017div8_i, "k_insects_2017div8.csv")
+
+########### Insects 2018 
+k_2018div16_i<-specieslevel(new_data[[6]], index = "degree", level = 'higher' )
+k_2018div2_i<-specieslevel(new_data[[7]], index = "degree", level = 'higher' )
+k_2018div4_i<-specieslevel(new_data[[8]], index = "degree", level = 'higher' )
+k_2018div8_i<-specieslevel(new_data[[9]], index = "degree", level = 'higher' )
+write.csv(k_2018div16_i, "k_insects_2018div16.csv")
+write.csv(k_2018div2_i, "k_insects_2018div2.csv")
+write.csv(k_2018div4_i, "k_insects_2018div4.csv")
+write.csv(k_2018div8_i, "k_insects_2018div8.csv")
+
+############ PLANTS 2017
+k_2017div16_p<-specieslevel(new_data[[1]], index = "degree", level = 'lower' )
+k_2017div2_p<-specieslevel(new_data[[2]], index = "degree", level = 'lower' )
+k_2017div4_p<-specieslevel(new_data[[3]], index = "degree", level = 'lower' )
+k_2017div8_p<-specieslevel(new_data[[4]], index = "degree", level = 'lower' )
+write.csv(k_2017div16_p, "k_plants_2017div16.csv")
+write.csv(k_2017div2_p, "k_plants_2017div2.csv")
+write.csv(k_2017div4_p, "k_plants_2017div4.csv")
+write.csv(k_2017div8_p, "k_plants_2017div8.csv")
+
+########### Plants 2018 
+k_2018div16_p<-specieslevel(new_data[[6]], index = "degree", level = 'lower' )
+k_2018div2_p<-specieslevel(new_data[[7]], index = "degree", level = 'lower' )
+k_2018div4_p<-specieslevel(new_data[[8]], index = "degree", level = 'lower' )
+k_2018div8_p<-specieslevel(new_data[[9]], index = "degree", level = 'lower' )
+write.csv(k_2018div16_p, "k_plants_2018div16.csv")
+write.csv(k_2018div2_p, "k_plants_2018div2.csv")
+write.csv(k_2018div4_p, "k_plants_2018div4.csv")
+write.csv(k_2018div8_p, "k_plants_2018div8.csv")
+
+
+
+
+head(new_data[10])
 
 ```
 
