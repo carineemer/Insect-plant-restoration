@@ -31,6 +31,7 @@ library(reshape2)
 library(dplyr)
 library(tidyverse)
 library(data.table)
+
 ```
 
 
@@ -107,7 +108,7 @@ plot2018<-plotweb(y2018,  ## set overall parameters
 
 
 ```{r plot igraph}
-guilds2017<-read.csv("data2017.csv", head=T)
+
 guilds2018<-read.csv("data2018.csv", head=T)
 
 ###################
@@ -173,6 +174,8 @@ plot(g,
 
 #################
 #########################2017
+guilds2017<-read.csv("data2017 new.csv", head=T)
+guilds2017<-read.csv("data2017.csv", head=T)
 #Transform into an igraph object
 net2 = cbind.data.frame(reference=row.names(y2017),y2017)
 str(net2)
@@ -207,7 +210,42 @@ V(g17)$color[V(g17)$guild=="insect"]="red"
 V(g17)$color[V(g17)$guild=="plant"]="green"
 
 ## to create a vector for labels
-V(g17)$label=as.character(guild$id)
+V(g17)$label=as.character(guild$ID)
+
+plot(g17,
+     # Set the drawing mode
+     # This package contains several drawing methods; try them!
+     layout=layout_with_graphopt,
+     # Set title
+     main='2017',
+    # Set node attributes
+     vertex.shape=V(g17)$shape,
+     vertex.size = 6,
+     vertex.color = V(g17)$color,
+     # Set link colors
+     edge.color = "lightblue",
+     # Set link curvature from 0 to 1
+     edge.curved=0.3,
+     # Set nodes labels
+     #vertex.label.dist=200,
+     vertex.label.color='black',
+     vertex.label.font=1,
+     vertex.label=V(g17)$label,
+     vertex.label.cex=0.5
+)
+
+
+
+
+
+
+
+
+#
+###Old
+
+### to create a vector for labels
+V(g17)$label=as.character(guild$ID)
 ## to create a vector for node size
 
 zVar <- (guild$k - min(guild$k)) / (max(guild$k)-min(guild$k))
@@ -225,7 +263,7 @@ plot(g17,
      main='2017',
      # Set node attributes
      vertex.shape=V(g17)$shape,
-     vertex.size = V(g17)$size,
+     #vertex.size = V(g17)$size,
      vertex.color = V(g17)$color,
      # Set link colors
      edge.color = "lightblue",
