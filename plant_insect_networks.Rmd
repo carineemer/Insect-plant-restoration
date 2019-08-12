@@ -39,10 +39,14 @@ library(data.table)
 y2017<-read.csv("Matriz_2017.csv", head=T,row.names=1)
 y2018<-read.csv("Matriz_2018.csv", head=T,row.names=1)
 
+y2017N<-read.csv("matriz_abund_rafa2017.csv", head=T,row.names=1)
+y2018N<-read.csv("matriz_abund_rafa2018.csv", head=T,row.names=1)
+
+
 ##### function to input multiples .csv at once
 
 ###################### --------------------------- Diversity 2017
-setwd("~/Dropbox/Rafael restauracao/Data/New matrices")
+setwd("~/Dropbox/Rafael restauracao/Insect_plant restoration/New matrices")
 # assuming your working directory is the folder with the CSVs
 myfiles <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
 new_data<-lapply(myfiles, read.csv, row.names=1, header = T)# read data from files, quickly
@@ -51,29 +55,28 @@ names(new_data) <- myfiles # assign names to list item
 
 
 ###################### --------------------------- Diversity 2018
-setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2018")
-myfiles18 <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
-d2018<-lapply(myfiles18, read.csv, row.names=1, header = T)# read data from files, quickly
-head(d2018[[1]]) # validate file reading
-names(d2018) <- myfiles18 # assign names to list item
+#setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2018")
+#myfiles18 <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
+#d2018<-lapply(myfiles18, read.csv, row.names=1, header = T)# read data from files, quickly
+#head(d2018[[1]]) # validate file reading
+#names(d2018) <- myfiles18 # assign names to list item
 
 ###################### ---------------------------Plots 2017
-setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2017/Matrizes por Plot")
+#setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2017/Matrizes por Plot")
 # assuming your working directory is the folder with the CSVs
-myfiles <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
-p2017<-lapply(myfiles, read.csv, row.names=1, header = T)# read data from files, quickly
-head(p2017[[1]]) # validate file reading
-names(p2017) <- myfiles # assign names to list item
+#myfiles <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
+#p2017<-lapply(myfiles, read.csv, row.names=1, header = T)# read data from files, quickly
+#head(p2017[[1]]) # validate file reading
+#names(p2017) <- myfiles # assign names to list item
 
 
 ###################### --------------------------- Plots 2018
-setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2018/Matrizes por Plot")
-myfiles18 <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
-p2018<-lapply(myfiles18, read.csv, row.names=1, header = T)# read data from files, quickly
-head(p2018[[1]]) # validate file reading
-names(p2018) <- myfiles18 # assign names to list item
+#setwd("~/Dropbox/Rafael restauracao/Data/Matrizes 2018/Matrizes por Plot")
+#myfiles18 <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
+#p2018<-lapply(myfiles18, read.csv, row.names=1, header = T)# read data from files, quickly
+#head(p2018[[1]]) # validate file reading
+#names(p2018) <- myfiles18 # assign names to list item
 
-str(p)
 
 ```
 
@@ -343,10 +346,10 @@ saveNetwork(n3D, file = "y2017.html") ### save network as html
 
 ```{r connectance}
 ############################## CONNECTANCE #####################
-obs_c_2017<-networklevel(y2017, index="connectance")
+obs_c_2017<-networklevel(y2017N, index="connectance")
 
 # Set Null Model
-  null <-nullmodel(y2017, N=100, method=3) 
+  null <-nullmodel(y2017N, N=100, method=3) 
   null1 <-sapply (X=null, FUN=networklevel, index="connectance") 
   means_null1 <- apply (X=cbind(null1),MARGIN=2, FUN=mean, na.rm=T)  
   sd.means_null1 <- apply(X=cbind(null1), MARGIN=2, FUN=sd, na.rm=T)
@@ -361,10 +364,10 @@ abline(v=obs_c_2017, col="red", lwd=1)
 
 ### 2018
 
-obs_c_2018<-networklevel(y2018, index="connectance")
+obs_c_2018<-networklevel(y2018N, index="connectance")
 
 # Set Null Model
-  null <-nullmodel(y2018, N=100, method=3) 
+  null <-nullmodel(y2018N, N=100, method=3) 
   null1 <-sapply (X=null, FUN=networklevel, index="connectance") 
   means_null1 <- apply (X=cbind(null1),MARGIN=2, FUN=mean, na.rm=T)  
   sd.means_null1 <- apply(X=cbind(null1), MARGIN=2, FUN=sd, na.rm=T)
@@ -385,6 +388,10 @@ results_c<-cbind(results_c2017,results_c2018) #### need to
 results_c
 
 
+## metrics for matrices of abundances 2017/2018
+
+results<-networklevel(y2017N, index="partner diversity") 
+results
 ```
 
 ```{r links per species and partner diversity}
@@ -422,6 +429,7 @@ head(res_metrics1)
 
 ###############
 ########################### weigthed nestedness
+
 wnodf<-sapply (new_data, FUN=networklevel, index="weighted nestedness")
 
 res_metrics2<-cbind(res_metrics1,wnodf)
@@ -429,7 +437,7 @@ res_metrics2<-cbind(res_metrics1,wnodf)
 head(res_metrics2)
 
 ###############
-########################### weigthed nestedness
+########################### weigthed modularity
 mod<-sapply (new_data, FUN=computeModules)
 modularity <- sapply(mod, function(x) x@likelihood)
 
@@ -460,12 +468,13 @@ results_pdiv<-cbind(results_pdiv2017p,results_pdiv2018p) ####
 
 ```{r nestedness}
 ########################## NESTEDNESS ########################## 
-nested_2017<-networklevel(y2017, index = "weighted NODF")
+nested_2017<-networklevel(y2017N, index = "weighted NODF")
 nested_2017
+
 
 #### Using the classical nullmodels for bipartite
 ## method 3 = vaznull
-  null <-nullmodel(y2017, N=100, method=3) 
+  null <-nullmodel(y2017N, N=100, method=3) 
   null1 <-sapply (X=null, FUN=nested, method="NODF2") 
   means_null1 <- apply (X=cbind(null1),MARGIN=2, FUN=mean, na.rm=T)  
   sd.means_null1 <- apply(X=cbind(null1), MARGIN=2, FUN=sd, na.rm=T)
@@ -479,10 +488,10 @@ abline(v=nested_2017, col="red", lwd=1)
 
 
 ####### 2018
-nested_2018<-networklevel(y2018, index = "weighted NODF")
+nested_2018<-networklevel(y2018N, index = "weighted NODF")
 nested_2018
 
-  null <-nullmodel(y2018, N=100, method=3) 
+  null <-nullmodel(y2018N, N=100, method=3) 
   null1 <-sapply (X=null, FUN=nested, method="NODF2") 
   means_null1 <- apply (X=cbind(null1),MARGIN=2, FUN=mean, na.rm=T)  
   sd.means_null1 <- apply(X=cbind(null1), MARGIN=2, FUN=sd, na.rm=T)
@@ -499,14 +508,14 @@ abline(v=nested_2018, col="red", lwd=1)
 
 ```{r modularity}
 ######################### MODULARITY ########################## 
-m_2018<-computeModules(y2018)
-m_2018
+m_2017<-computeModules(y2017N)
+m_2017
 # Check the components of each module
   #printoutModuleInformation(m_2017)
   #plotModuleWeb(m_2017)
 
 # Set Null Model
-  nulls <- nullmodel(y2017, N=100, method=3) 
+  nulls <- nullmodel(y2017N, N=100, method=3) 
   modules.nulls <- sapply(nulls, computeModules)
   like.nulls <- sapply(modules.nulls, function(x) x@likelihood)
   z <- (m_2017@likelihood - mean(like.nulls))/sd(like.nulls)
