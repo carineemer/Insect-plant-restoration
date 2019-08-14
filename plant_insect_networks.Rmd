@@ -50,7 +50,7 @@ setwd("~/Dropbox/Rafael restauracao/Insect_plant restoration/New matrices")
 # assuming your working directory is the folder with the CSVs
 myfiles <- dir(pattern = "\\.(csv|CSV)$", full.names = TRUE) # get filenames and paths
 new_data<-lapply(myfiles, read.csv, row.names=1, header = T)# read data from files, quickly
-head(new_data[[1]]) # validate file reading
+head(new_data[[12]]) # validate file reading
 names(new_data) <- myfiles # assign names to list item
 
 
@@ -430,7 +430,7 @@ head(res_metrics1)
 ###############
 ########################### weigthed nestedness
 
-wnodf<-sapply (new_data, FUN=networklevel, index="weighted nestedness")
+nodf<-sapply (new_data, FUN=networklevel, index="NODF")
 
 res_metrics2<-cbind(res_metrics1,wnodf)
 
