@@ -380,18 +380,18 @@ plot(density(null1), lwd=2, xlim=c(0, 1))
 abline(v=obs_c_2018, col="red", lwd=1)
 
 ################### diversity plots
-###d2017
+
 results_c<-sapply (new_data, FUN=networklevel, index="connectance") 
 ###d2018
-results_c2018<-sapply (d2018, FUN=networklevel, index="connectance") 
-results_c<-cbind(results_c2017,results_c2018) #### need to 
-results_c
+#results_c2018<-sapply (d2018, FUN=networklevel, index="connectance") 
+#results_c<-cbind(results_c2017,results_c2018) #### need to 
+
 
 
 ## metrics for matrices of abundances 2017/2018
 
-results<-networklevel(y2017N, index="partner diversity") 
-results
+#results<-networklevel(y2017N, index="partner diversity") 
+#results
 ```
 
 ```{r links per species and partner diversity}
@@ -416,7 +416,7 @@ results_pdiv<-cbind(results_pdiv2017,results_pdiv2018) ####
 res_partdiv_newdata<-sapply (new_data, FUN=networklevel, index="partner diversity")
 res_partdiv_newdata<-t(as.data.frame(res_partdiv_newdata))
 
-res_metrics<-cbind(links_sp,res_partdiv_newdata)
+res_metrics<-cbind(links_sp,res_partdiv_newdata, results_c)
 
 
 ###############
@@ -430,7 +430,7 @@ head(res_metrics1)
 ###############
 ########################### weigthed nestedness
 
-nodf<-sapply (new_data, FUN=networklevel, index="NODF")
+wnodf<-sapply (new_data, FUN=networklevel, index="weighted NODF")
 
 res_metrics2<-cbind(res_metrics1,wnodf)
 
@@ -446,7 +446,7 @@ res_metrics3<-cbind(res_metrics2,modularity)
 
 head(res_metrics3)
 
-write.csv(res_metrics3, "results_newdata.csv")
+write.csv(res_metrics3, "results_newdata_sept2019.csv")
 
 
 ### --------------------------------------- Individual plots --------------
